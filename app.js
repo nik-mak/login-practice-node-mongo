@@ -59,6 +59,7 @@ app.post("/register", async (req, res) => {
       password: encryptedPassword,
     })
 
+    // Create cookie with user details
     req.session.user = user
 
     // Create token
@@ -117,6 +118,20 @@ app.post("/login", async (req, res) => {
     return res.status(400).send("Invalid Credentials")  
   } catch { 
     res.send()
+  }
+})
+
+app.get('/logout', (req, res) => {
+  if (req.session.user) {
+    req.session.destroy(err => {
+      if (err) {
+        res.status(500).send('something wrong with logout')
+      } else {
+        res.status(200).send('Successfully logged out')
+      }
+    })
+  } else {
+    res.status(200).send('Not logged in')
   }
 })
 
