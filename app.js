@@ -6,6 +6,7 @@ const bcrypt = require("bcrypt")
 const jwt = require('jsonwebtoken')
 const cors = require('cors')
 const session = require('express-session')
+const MongoStore = require('connect-mongo')
 
 const User = require("./model/user") 
 const auth = require("./middleware/auth")
@@ -25,6 +26,9 @@ const sessionConfig = {
   },
   resave: false,
   saveUninitialized: true, // set to false in production, user has to give consent
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_STORE_URI
+  })
 }
 
 app.use(express.json())
@@ -67,7 +71,7 @@ app.post("/register", async (req, res) => {
       { user_id: user._id, email },
       process.env.TOKEN_KEY,
       {
-        expiresIn: "5h",
+        expiresIn: "2h",
       }
     ) 
 
@@ -103,14 +107,12 @@ app.post("/login", async (req, res) => {
         { user_id: user._id, email },
         process.env.TOKEN_KEY,
         {
-          expiresIn: "5h",
+          expiresIn: "2h",
         }
       )  
 
       // Save the users token to cookie
       req.session.token = token 
-
-      console.log(req.session)
 
       // Return the user
       return res.status(200).json(user)  
@@ -121,11 +123,12 @@ app.post("/login", async (req, res) => {
   }
 })
 
+// Logout
 app.get('/logout', (req, res) => {
   if (req.session.user) {
     req.session.destroy(err => {
       if (err) {
-        res.status(500).send('something wrong with logout')
+        res.status(500).send('Something wrong with logout')
       } else {
         res.status(200).send('Successfully logged out')
       }
@@ -135,6 +138,7 @@ app.get('/logout', (req, res) => {
   }
 })
 
+// Generic welcome route to test login/logout
 app.post("/welcome", auth, (req, res) => {
   res.status(200).send("Welcome!")
 })
