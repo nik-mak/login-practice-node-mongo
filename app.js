@@ -5,15 +5,30 @@ const express = require("express")
 const bcrypt = require("bcrypt")
 const jwt = require('jsonwebtoken')
 const cors = require('cors')
+const session = require('express-session')
 
 const User = require("./model/user") 
 const auth = require("./middleware/auth")
+const user = require("./model/user")
 
 const app = express()
 
 app.use(cors())
 
+const sessionConfig = {
+  name: 'UID', // name of cookie
+  secret: process.env.COOKIE_SECRET, // secret that makes the cookie effective
+  cookie: {
+    maxAge: 1000 * 60 * 60, // time span of cookie in ms
+    secure: false, // set to true in production for HTTPS only access
+    httpOnly: true // true = no access from js
+  },
+  resave: false,
+  saveUninitialized: true, // set to false in production, user has to give consent
+}
+
 app.use(express.json())
+app.use(session(sessionConfig))
 
 // Register new user
 app.post("/register", async (req, res) => {
@@ -26,7 +41,7 @@ app.post("/register", async (req, res) => {
       res.status(400).send("All input is required") 
     }
 
-    // Check if user already exist in out database
+    // Check if user already exist in our database
     const existingUser = await User.findOne({ email }) 
 
     if (existingUser) {
@@ -44,6 +59,8 @@ app.post("/register", async (req, res) => {
       password: encryptedPassword,
     })
 
+    req.session.user = user
+
     // Create token
     const token = jwt.sign(
       { user_id: user._id, email },
@@ -54,7 +71,7 @@ app.post("/register", async (req, res) => {
     ) 
 
     // Save token
-    user.token = token 
+    req.session.token = token
 
     // Return new user
     res.status(201).json(user) 
@@ -77,6 +94,9 @@ app.post("/login", async (req, res) => {
     const user = await User.findOne({ email })  
 
     if (user && (await bcrypt.compare(password, user.password))) {
+      // Create cookie with user details
+      req.session.user = user
+
       // Create token
       const token = jwt.sign(
         { user_id: user._id, email },
@@ -86,8 +106,10 @@ app.post("/login", async (req, res) => {
         }
       )  
 
-      // Save the users token
-      user.token = token  
+      // Save the users token to cookie
+      req.session.token = token 
+
+      console.log(req.session)
 
       // Return the user
       return res.status(200).json(user)  
