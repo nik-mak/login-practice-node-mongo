@@ -1,10 +1,14 @@
-const mongoose = require("mongoose") 
+const mongoose = require("../config/database") 
 
-const UserSchema = new mongoose.Schema({
-  first_name: { type: String, default: null },
-  last_name: { type: String, default: null },
-  email: { type: String, unique: true },
-  password: { type: String },
-}) 
+const UserModel = mongoose.model(
+  "User",
+  new mongoose.Schema({
+    first_name: { type: String, default: null },
+    last_name: { type: String, default: null },
+    email: { type: String, unique: true },
+    password: { type: String },
+  })
+)
 
-module.exports = mongoose.model("User", UserSchema)
+
+module.exports = UserModel
