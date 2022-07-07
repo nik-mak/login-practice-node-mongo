@@ -15,7 +15,7 @@ router.post("/register", async (req, res) => {
     const { firstName, lastName, email, password, role } = req.body
 
     // Validate user input
-    if (!(firstName && lastName && email && password && role)) {
+    if (!(firstName && lastName && email && password )) {
       res.status(400).send("All input is required") 
     }
 
