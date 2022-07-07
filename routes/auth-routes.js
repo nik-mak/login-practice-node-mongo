@@ -12,10 +12,10 @@ router.use(express.json())
 router.post("/register", async (req, res) => {
    try {
     // Get user input
-    const { firstName, lastName, email, password } = req.body
+    const { firstName, lastName, email, password, role } = req.body
 
     // Validate user input
-    if (!(firstName && lastName && email && password)) {
+    if (!(firstName && lastName && email && password && role)) {
       res.status(400).send("All input is required") 
     }
 
@@ -35,6 +35,7 @@ router.post("/register", async (req, res) => {
       last_name: lastName,
       email: email.toLowerCase(),
       password: encryptedPassword,
+      role: role
     })
 
     // Create cookie with user details
